@@ -4,6 +4,7 @@ import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 import { User } from './models/User';
 
 const app: Express = express();
+//test
 
 // Middleware
 app.use(express.json());
