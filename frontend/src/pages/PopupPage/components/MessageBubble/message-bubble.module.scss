@@ -1,0 +1,23 @@
+.bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  max-width: 80%;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.userBubble {
+  background: #4285f4;
+  color: white;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.assistantBubble {
+  background: #e8e8e8;
+  color: #333;
+  align-self: flex-start;
+}
+

@@ -1,0 +1,19 @@
+.container {
+  width: 400px;
+  min-height: 300px;
+  max-height: 600px;
+  font-family: system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
