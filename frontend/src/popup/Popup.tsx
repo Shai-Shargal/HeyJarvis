@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { getJWT, setJWT, clearJWT } from './storage';
-import { getUserInfo, deleteTodayEmails, type UserInfo, type DeleteTodayResponse } from './api';
+import { getJWT, clearJWT } from './storage';
+import { getUserInfo, deleteTodayEmails, chat, type UserInfo, type DeleteTodayResponse } from './api';
+import { MessageList, type Message } from './components/MessageList';
+import { ChatInput } from './components/ChatInput';
 
 const BASE_URL = 'http://localhost:4000';
 
@@ -12,6 +14,8 @@ function Popup() {
   const [error, setError] = useState<string | null>(null);
   const [deleteResult, setDeleteResult] = useState<DeleteTodayResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatting, setChatting] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -78,6 +82,7 @@ function Popup() {
       setUser(null);
       setDeleteResult(null);
       setError(null);
+      setMessages([]);
     } catch (err) {
       console.error('Error disconnecting:', err);
       setError('Failed to disconnect');
@@ -103,6 +108,42 @@ function Popup() {
     } finally {
       setDeleting(false);
     }
+  }
+
+  async function handleChatSend(message: string) {
+    if (!jwt) {
+      setError('Not connected. Please connect Google first.');
+      return;
+    }
+
+    try {
+      setChatting(true);
+      setError(null);
+
+      // Add user message
+      const userMessage: Message = { role: 'user', text: message };
+      setMessages((prev) => [...prev, userMessage]);
+
+      // Get action plan
+      const response = await chat(jwt, message);
+      const assistantMessage: Message = {
+        role: 'assistant',
+        plan: response.plan,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err) {
+      console.error('Error in chat:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate action plan');
+    } finally {
+      setChatting(false);
+    }
+  }
+
+  function handleCancelPlan() {
+    // Remove the last assistant message with plan
+    setMessages((prev) => prev.filter((msg, idx) => 
+      !(idx === prev.length - 1 && msg.role === 'assistant' && msg.plan)
+    ));
   }
 
   if (loading) {
@@ -139,7 +180,7 @@ function Popup() {
             </button>
           </div>
         ) : (
-          <div style={styles.section}>
+          <>
             <div style={styles.userInfo}>
               <p style={styles.text}>
                 <strong>Connected as:</strong>
@@ -148,6 +189,14 @@ function Popup() {
               {user.name && <p style={styles.text}>{user.name}</p>}
             </div>
 
+            {/* Chat Section */}
+            <div style={styles.chatSection}>
+              <h2 style={styles.sectionTitle}>Chat</h2>
+              <MessageList messages={messages} onCancelPlan={handleCancelPlan} />
+              <ChatInput onSend={handleChatSend} disabled={chatting} />
+            </div>
+
+            {/* Legacy Actions */}
             <div style={styles.actions}>
               <button
                 onClick={handleDryRunDelete}
@@ -188,7 +237,7 @@ function Popup() {
                 )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -199,13 +248,17 @@ const styles: { [key: string]: React.CSSProperties } = {
   container: {
     width: '400px',
     minHeight: '300px',
+    maxHeight: '600px',
     fontFamily: 'system-ui, -apple-system, sans-serif',
+    display: 'flex',
+    flexDirection: 'column',
   },
   header: {
     background: '#4285f4',
     color: 'white',
     padding: '16px',
     textAlign: 'center',
+    flexShrink: 0,
   },
   title: {
     margin: 0,
@@ -214,6 +267,8 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   content: {
     padding: '16px',
+    flex: 1,
+    overflowY: 'auto',
   },
   section: {
     marginBottom: '16px',
@@ -229,10 +284,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '14px',
     color: '#333',
   },
+  chatSection: {
+    marginBottom: '16px',
+  },
+  sectionTitle: {
+    margin: '0 0 12px 0',
+    fontSize: '16px',
+    fontWeight: '600',
+  },
   actions: {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    marginTop: '16px',
   },
   button: {
     padding: '10px 16px',
@@ -288,4 +352,3 @@ if (container) {
   const root = createRoot(container);
   root.render(<Popup />);
 }
-

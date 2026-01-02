@@ -56,3 +56,4 @@ frontend/
 
 Make sure the backend is running on `http://localhost:4000` before using the extension.
 
+

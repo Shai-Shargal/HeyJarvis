@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 
 export default defineConfig({
   plugins: [
@@ -13,19 +13,22 @@ export default defineConfig({
         if (!existsSync(distDir)) {
           mkdirSync(distDir, { recursive: true });
         }
-        copyFileSync(
-          resolve(__dirname, 'public/manifest.json'),
-          resolve(distDir, 'manifest.json')
-        );
+        const manifestSource = resolve(__dirname, 'public/manifest.json');
+        const manifestDest = resolve(distDir, 'manifest.json');
+        
+        if (existsSync(manifestSource)) {
+          copyFileSync(manifestSource, manifestDest);
+        } else {
+          console.warn('Warning: public/manifest.json not found, skipping copy');
+        }
         
         // Fix popup.html script paths to be relative
         const popupPath = resolve(distDir, 'popup.html');
         if (existsSync(popupPath)) {
-          const fs = require('fs');
-          let popupContent = fs.readFileSync(popupPath, 'utf8');
+          let popupContent = readFileSync(popupPath, 'utf8');
           // Replace absolute paths with relative paths
           popupContent = popupContent.replace(/src="\/assets\//g, 'src="./assets/');
-          fs.writeFileSync(popupPath, popupContent);
+          writeFileSync(popupPath, popupContent);
         }
       },
     },

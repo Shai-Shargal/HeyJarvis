@@ -27,10 +27,10 @@ router.post(
       }
 
       // Check for dry-run mode
-      const dryRun = req.query.dryRun === 'true' || req.query.dryRun === true;
+      const dryRun = String(req.query.dryRun) === 'true';
       
       // Check if user wants to delete newest email instead of today's emails
-      const deleteNewest = req.query.newest === 'true' || req.query.newest === true;
+      const deleteNewest = String(req.query.newest) === 'true';
 
       // Get access token using refresh token
       const accessToken = await getGoogleAccessToken(req.userId);

@@ -9,6 +9,9 @@ interface EnvConfig {
   GOOGLE_CLIENT_SECRET: string;
   GOOGLE_REDIRECT_URI: string;
   JWT_SECRET: string;
+  OPENAI_API_KEY: string;
+  LLM_PROVIDER: string;
+  LLM_MODEL: string;
 }
 
 function getEnvVar(key: string): string {
@@ -30,5 +33,8 @@ export const env: EnvConfig = {
   GOOGLE_CLIENT_SECRET: getEnvVar('GOOGLE_CLIENT_SECRET'),
   GOOGLE_REDIRECT_URI: getEnvVar('GOOGLE_REDIRECT_URI'),
   JWT_SECRET: getEnvVar('JWT_SECRET'),
+  OPENAI_API_KEY: getEnvVar('OPENAI_API_KEY'),
+  LLM_PROVIDER: getEnvVarOptional('LLM_PROVIDER', 'openai'),
+  LLM_MODEL: getEnvVarOptional('LLM_MODEL', 'gpt-4o-mini'),
 };
 

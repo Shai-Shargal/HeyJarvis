@@ -18,6 +18,29 @@ export interface DeleteTodayResponse {
   }>;
 }
 
+export interface ActionPlan {
+  intent: 'DELETE_EMAILS' | 'ARCHIVE_EMAILS' | 'LABEL_EMAILS';
+  params: {
+    query: string;
+    labelName?: string;
+  };
+  estimatedImpact: {
+    count: number;
+    sample: Array<{
+      subject: string;
+      from: string;
+      date: string;
+    }>;
+  };
+  explanation: string;
+  risk: 'LOW' | 'MEDIUM' | 'HIGH';
+  confidence: number;
+}
+
+export interface ChatResponse {
+  plan: ActionPlan;
+}
+
 export async function getUserInfo(jwt: string): Promise<UserInfo> {
   const response = await fetch(`${BASE_URL}/me`, {
     method: 'GET',
@@ -50,6 +73,24 @@ export async function deleteTodayEmails(
       'Authorization': `Bearer ${jwt}`,
       'Content-Type': 'application/json',
     },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function chat(jwt: string, message: string): Promise<ChatResponse> {
+  const response = await fetch(`${BASE_URL}/chat`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
   });
 
   if (!response.ok) {

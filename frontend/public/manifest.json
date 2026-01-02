@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "HeyJarvis",
+  "version": "1.0.0",
+  "description": "AI-powered Gmail assistant",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "HeyJarvis"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:4000/*"
+  ]
+}
+

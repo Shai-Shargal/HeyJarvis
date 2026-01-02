@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './auth/auth.routes';
 import gmailRoutes from './gmail/gmail.routes';
+import chatRoutes from './chat/chat.routes';
 import { authMiddleware, AuthRequest } from './middleware/authMiddleware';
 import { User } from './models/User';
 import { GoogleToken } from './models/GoogleToken';
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/auth', authRoutes);
 app.use('/gmail', gmailRoutes);
+app.use('/chat', chatRoutes);
 
 // Protected route: GET /me
 app.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
