@@ -22,13 +22,33 @@ export default defineConfig({
           console.warn('Warning: public/manifest.json not found, skipping copy');
         }
         
-        // Fix popup.html script paths to be relative
-        const popupPath = resolve(distDir, 'popup.html');
-        if (existsSync(popupPath)) {
-          let popupContent = readFileSync(popupPath, 'utf8');
+        // Fix popup.html - copy from dist/public if it exists and fix paths
+        const publicPopupPath = resolve(distDir, 'public/popup.html');
+        const rootPopupPath = resolve(distDir, 'popup.html');
+        
+        if (existsSync(publicPopupPath)) {
+          // Copy the built popup.html from public to root and fix paths
+          let popupContent = readFileSync(publicPopupPath, 'utf8');
           // Replace absolute paths with relative paths
           popupContent = popupContent.replace(/src="\/assets\//g, 'src="./assets/');
-          writeFileSync(popupPath, popupContent);
+          writeFileSync(rootPopupPath, popupContent);
+        } else if (existsSync(rootPopupPath)) {
+          // Fix paths in existing popup.html
+          let popupContent = readFileSync(rootPopupPath, 'utf8');
+          // Find the actual built file in assets
+          const assetsDir = resolve(distDir, 'assets');
+          if (existsSync(assetsDir)) {
+            const { readdirSync } = require('fs');
+            const files = readdirSync(assetsDir);
+            const popupFile = files.find((f: string) => f.startsWith('popup-') && f.endsWith('.js'));
+            if (popupFile) {
+              // Replace source paths with built asset paths
+              popupContent = popupContent.replace(/src="[^"]*"/g, `src="./assets/${popupFile}"`);
+            }
+          }
+          // Also fix any absolute asset paths
+          popupContent = popupContent.replace(/src="\/assets\//g, 'src="./assets/');
+          writeFileSync(rootPopupPath, popupContent);
         }
       },
     },
