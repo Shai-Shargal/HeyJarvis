@@ -1,12 +1,14 @@
-import { createLLMProvider } from '../llm/llm.factory';
+import { Injectable } from '@nestjs/common';
+import { LLMService } from '../llm/llm.service';
 import { ActionPlan } from './chat.types';
 
+@Injectable()
 export class ChatService {
-  private llmProvider = createLLMProvider();
+  constructor(private readonly llmService: LLMService) {}
 
   async generateActionPlan(userMessage: string): Promise<ActionPlan> {
     try {
-      const plan = await this.llmProvider.generateActionPlan(userMessage);
+      const plan = await this.llmService.generateActionPlan(userMessage);
       return plan;
     } catch (error) {
       if (error instanceof Error) {
@@ -16,4 +18,3 @@ export class ChatService {
     }
   }
 }
-

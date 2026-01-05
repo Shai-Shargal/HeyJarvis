@@ -1,26 +1,30 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import { env } from '../config/env';
 import { LLMProvider } from './llm.provider';
 import { ActionPlan } from '../chat/chat.types';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt';
 import { validateActionPlan } from '../chat/chat.schema';
 
+@Injectable()
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
 
-  constructor() {
-    if (!env.OPENAI_API_KEY) {
+  constructor(private configService: ConfigService) {
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    if (!apiKey) {
       throw new Error('OPENAI_API_KEY is required');
     }
     this.client = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
+      apiKey,
     });
   }
 
   async generateActionPlan(userMessage: string): Promise<ActionPlan> {
     try {
+      const model = this.configService.get<string>('LLM_MODEL', 'gpt-4o-mini');
       const response = await this.client.chat.completions.create({
-        model: env.LLM_MODEL,
+        model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(userMessage) },
@@ -58,4 +62,3 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 }
-

@@ -10,6 +10,7 @@ import { UserInfo } from './components/UserInfo/UserInfo';
 import { ChatSection } from './components/ChatSection/ChatSection';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { DeleteResult } from './components/DeleteResult/DeleteResult';
+// @ts-ignore: Missing CSS module type declaration
 import styles from './popup-page.module.scss';
 
 export function PopupPage() {
