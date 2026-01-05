@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { chat } from '../helpers/api';
+import { chat, executePlan } from '../helpers/api';
 import { Message } from '../pages/PopupPage/components/MessageList/MessageList';
 
 export function useChat(jwt: string | null) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [executing, setExecuting] = useState(false);
 
   async function sendMessage(message: string) {
     if (!jwt) {
@@ -50,13 +51,41 @@ export function useChat(jwt: string | null) {
     setMessages([]);
   }, []);
 
+  const executeActionPlan = useCallback(async (plan: Message['plan']) => {
+    if (!jwt || !plan) {
+      setError('Cannot execute: missing JWT or plan');
+      return;
+    }
+
+    try {
+      setExecuting(true);
+      setError(null);
+
+      const result = await executePlan(jwt, plan);
+      
+      // Add success message
+      const successMessage: Message = {
+        role: 'assistant',
+        text: result.message || `Successfully ${result.action.toLowerCase()} ${result.emailsAffected} email(s)`,
+      };
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (err) {
+      console.error('Error executing plan:', err);
+      setError(err instanceof Error ? err.message : 'Failed to execute action');
+    } finally {
+      setExecuting(false);
+    }
+  }, [jwt]);
+
   return {
     messages,
     loading,
     error,
+    executing,
     sendMessage,
     cancelPlan,
     clearMessages,
+    executeActionPlan,
   };
 }
 

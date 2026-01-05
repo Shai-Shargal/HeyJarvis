@@ -41,6 +41,18 @@ export interface ChatResponse {
   plan: ActionPlan;
 }
 
+export interface ExecuteResponse {
+  success: boolean;
+  action: string;
+  emailsAffected: number;
+  sample: Array<{
+    subject: string;
+    from: string;
+    date: string;
+  }>;
+  message: string;
+}
+
 export async function getUserInfo(jwt: string): Promise<UserInfo> {
   const response = await fetch(`${BASE_URL}/me`, {
     method: 'GET',
@@ -101,3 +113,20 @@ export async function chat(jwt: string, message: string): Promise<ChatResponse> 
   return response.json();
 }
 
+export async function executePlan(jwt: string, plan: ActionPlan): Promise<ExecuteResponse> {
+  const response = await fetch(`${BASE_URL}/execute`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ plan }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || error.message || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+}

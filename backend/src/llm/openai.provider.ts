@@ -13,11 +13,15 @@ export class OpenAIProvider implements LLMProvider {
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is required');
+      throw new Error('OPENAI_API_KEY is required. Please set it in your .env file.');
+    }
+    if (apiKey.trim() === '' || apiKey === 'your_openai_api_key') {
+      throw new Error('OPENAI_API_KEY is not set correctly. Please set a valid API key in your .env file.');
     }
     this.client = new OpenAI({
       apiKey,
     });
+    console.log('✅ OpenAI provider initialized');
   }
 
   async generateActionPlan(userMessage: string): Promise<ActionPlan> {
@@ -54,7 +58,29 @@ export class OpenAIProvider implements LLMProvider {
 
       // Validate and return ActionPlan
       return validateActionPlan(jsonData);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('OpenAI API Error Details:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        type: error?.type,
+      });
+
+      // Handle specific OpenAI API errors
+      if (error?.status === 401) {
+        throw new Error('Invalid OpenAI API key. Please check your OPENAI_API_KEY in .env file.');
+      }
+      if (error?.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded or insufficient credits. Please add credits to your OpenAI account.');
+      }
+      if (error?.status === 500 || error?.status === 503) {
+        throw new Error('OpenAI API is temporarily unavailable. Please try again later.');
+      }
+      if (error?.code === 'insufficient_quota') {
+        throw new Error('OpenAI API quota exceeded. Please add credits to your OpenAI account at https://platform.openai.com/account/billing');
+      }
+
+      // Generic error handling
       if (error instanceof Error) {
         throw new Error(`OpenAI API error: ${error.message}`);
       }

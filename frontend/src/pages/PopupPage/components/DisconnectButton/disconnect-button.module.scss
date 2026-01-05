@@ -1,0 +1,26 @@
+.container {
+  margin-top: 16px;
+}
+
+.button {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  background: #ea4335;
+  color: white;
+
+  &:hover {
+    background: #d33b2c;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+

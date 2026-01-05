@@ -5,9 +5,11 @@ import styles from './plan-card.module.scss';
 interface PlanCardProps {
   plan: ActionPlan;
   onCancel: () => void;
+  onApprove?: () => void;
+  executing?: boolean;
 }
 
-export function PlanCard({ plan, onCancel }: PlanCardProps) {
+export function PlanCard({ plan, onCancel, onApprove, executing = false }: PlanCardProps) {
   const intentLabels: Record<ActionPlan['intent'], string> = {
     DELETE_EMAILS: 'Delete Emails',
     ARCHIVE_EMAILS: 'Archive Emails',
@@ -69,14 +71,15 @@ export function PlanCard({ plan, onCancel }: PlanCardProps) {
 
       <div className={styles.actions}>
         <button
-          disabled
-          className={`${styles.button} ${styles.buttonApprove} ${styles.buttonDisabled}`}
-          title="Coming in Day 7"
+          onClick={onApprove}
+          disabled={executing || !onApprove}
+          className={`${styles.button} ${styles.buttonApprove} ${(!onApprove || executing) ? styles.buttonDisabled : ''}`}
         >
-          Approve (Coming Day 7)
+          {executing ? 'Deleting...' : plan.intent === 'DELETE_EMAILS' ? 'Delete' : 'Confirm'}
         </button>
         <button
           onClick={onCancel}
+          disabled={executing}
           className={`${styles.button} ${styles.buttonCancel}`}
         >
           Cancel

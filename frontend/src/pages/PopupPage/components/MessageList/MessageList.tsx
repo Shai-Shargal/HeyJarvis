@@ -13,9 +13,11 @@ export interface Message {
 interface MessageListProps {
   messages: Message[];
   onCancelPlan: () => void;
+  onApprovePlan?: (plan: Message['plan']) => void;
+  executing?: boolean;
 }
 
-export function MessageList({ messages, onCancelPlan }: MessageListProps) {
+export function MessageList({ messages, onCancelPlan, onApprovePlan, executing = false }: MessageListProps) {
   if (messages.length === 0) {
     return (
       <div className={styles.empty}>
@@ -29,7 +31,14 @@ export function MessageList({ messages, onCancelPlan }: MessageListProps) {
       {messages.map((message, index) => (
         <div key={index} className={styles.messageWrapper}>
           {message.text && <MessageBubble role={message.role} text={message.text} />}
-          {message.plan && <PlanCard plan={message.plan} onCancel={onCancelPlan} />}
+          {message.plan && (
+            <PlanCard 
+              plan={message.plan} 
+              onCancel={onCancelPlan}
+              onApprove={onApprovePlan ? () => onApprovePlan(message.plan) : undefined}
+              executing={executing}
+            />
+          )}
         </div>
       ))}
     </div>

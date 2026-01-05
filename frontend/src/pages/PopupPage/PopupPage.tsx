@@ -1,31 +1,27 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
-import { useDeleteEmails } from '../../hooks/useDeleteEmails';
 import { Header } from './components/Header/Header';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
 import { ErrorBanner } from './components/ErrorBanner/ErrorBanner';
 import { ConnectButton } from './components/ConnectButton/ConnectButton';
 import { UserInfo } from './components/UserInfo/UserInfo';
 import { ChatSection } from './components/ChatSection/ChatSection';
-import { ActionButtons } from './components/ActionButtons/ActionButtons';
-import { DeleteResult } from './components/DeleteResult/DeleteResult';
+import { DisconnectButton } from './components/DisconnectButton/DisconnectButton';
 // @ts-ignore: Missing CSS module type declaration
 import styles from './popup-page.module.scss';
 
 export function PopupPage() {
   const { jwt, user, loading, error: authError, connectGoogle, disconnect } = useAuth();
-  const { messages, loading: chatLoading, error: chatError, sendMessage, cancelPlan, clearMessages } = useChat(jwt);
-  const { result: deleteResult, loading: deleting, error: deleteError, dryRunDelete, clearResult } = useDeleteEmails(jwt);
+  const { messages, loading: chatLoading, error: chatError, executing, sendMessage, cancelPlan, clearMessages, executeActionPlan } = useChat(jwt);
 
   // Combine all errors
-  const error = authError || chatError || deleteError;
+  const error = authError || chatError;
 
-  // Clear chat and delete results on disconnect
+  // Clear chat on disconnect
   React.useEffect(() => {
     if (!user) {
       clearMessages();
-      clearResult();
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -57,16 +53,14 @@ export function PopupPage() {
               messages={messages}
               onSendMessage={sendMessage}
               onCancelPlan={cancelPlan}
+              onApprovePlan={executeActionPlan}
               loading={chatLoading}
+              executing={executing}
             />
 
-            <ActionButtons
-              onDryRunDelete={dryRunDelete}
+            <DisconnectButton
               onDisconnect={disconnect}
-              deleting={deleting}
             />
-
-            {deleteResult && <DeleteResult result={deleteResult} />}
           </>
         )}
       </div>

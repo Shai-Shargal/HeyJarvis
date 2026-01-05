@@ -8,20 +8,29 @@ interface ChatSectionProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
   onCancelPlan: () => void;
+  onApprovePlan?: (plan: Message['plan']) => void;
   loading: boolean;
+  executing?: boolean;
 }
 
 export function ChatSection({
   messages,
   onSendMessage,
   onCancelPlan,
+  onApprovePlan,
   loading,
+  executing = false,
 }: ChatSectionProps) {
   return (
     <div className={styles.chatSection}>
       <h2 className={styles.sectionTitle}>Chat</h2>
-      <MessageList messages={messages} onCancelPlan={onCancelPlan} />
-      <ChatInput onSend={onSendMessage} disabled={loading} />
+      <MessageList 
+        messages={messages} 
+        onCancelPlan={onCancelPlan}
+        onApprovePlan={onApprovePlan}
+        executing={executing}
+      />
+      <ChatInput onSend={onSendMessage} disabled={loading || executing} />
     </div>
   );
 }
