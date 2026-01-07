@@ -24,11 +24,20 @@ export class ChatService {
       
       // SAFETY: If user asks for "latest", enforce maxResults=1
       if (isLatestEmail) {
+        // Ensure params object exists
+        if (!plan.params) {
+          plan.params = { query: 'is:inbox' };
+        }
         plan.params.maxResults = 1;
         // Ensure query is inbox-based for latest email
         if (!plan.params.query || plan.params.query.trim() === '') {
           plan.params.query = 'is:inbox';
         }
+        console.log('✅ Latest email detected - set maxResults=1', {
+          userMessage,
+          query: plan.params.query,
+          maxResults: plan.params.maxResults,
+        });
       }
 
       // Try to get real email samples from Gmail
@@ -102,6 +111,14 @@ export class ChatService {
         // This is fine - the plan is still valid, just with estimated samples
         console.warn('Could not fetch real email samples, using LLM estimates:', gmailError);
       }
+
+      // Debug: Log final plan before returning
+      console.log('📋 Final ActionPlan:', {
+        intent: plan.intent,
+        risk: plan.risk,
+        maxResults: plan.params?.maxResults,
+        query: plan.params?.query,
+      });
 
       return plan;
     } catch (error) {

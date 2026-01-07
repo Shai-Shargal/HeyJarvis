@@ -121,16 +121,31 @@ export async function executePlan(jwt: string, plan: ActionPlan): Promise<Execut
     (plan.intent === 'DELETE_EMAILS' && cap > 1) ||
     (plan.risk === 'HIGH' && cap > 1);
 
+  // Debug logging
+  console.log('🔍 Frontend Execute Debug:', {
+    intent: plan.intent,
+    risk: plan.risk,
+    maxResults: plan.params?.maxResults,
+    cap,
+    requiresConfirm,
+  });
+
+  const requestBody: { plan: ActionPlan; confirm?: boolean } = { 
+    plan,
+  };
+  
+  // Only include confirm if it's required (don't send undefined)
+  if (requiresConfirm) {
+    requestBody.confirm = true;
+  }
+
   const response = await fetch(`${BASE_URL}/execute`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${jwt}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ 
-      plan,
-      confirm: requiresConfirm ? true : undefined, // Send confirm=true if required
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

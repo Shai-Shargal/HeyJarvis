@@ -35,7 +35,10 @@ export function MessageList({ messages, onCancelPlan, onApprovePlan, executing =
             <PlanCard 
               plan={message.plan} 
               onCancel={onCancelPlan}
-              onApprove={onApprovePlan ? () => onApprovePlan(message.plan) : undefined}
+              onApprove={onApprovePlan ? () => {
+                console.log('📋 MessageList: Calling onApprovePlan with plan:', message.plan);
+                onApprovePlan(message.plan);
+              } : undefined}
               executing={executing}
             />
           )}

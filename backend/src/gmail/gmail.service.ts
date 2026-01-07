@@ -229,22 +229,37 @@ export class GmailService {
   ): Promise<void> {
     try {
       if (messageIds.length === 0) {
+        console.log('⚠️ No message IDs to delete');
         return;
       }
+
+      console.log('📧 Gmail API: Moving to trash:', {
+        count: messageIds.length,
+        messageIds: messageIds.slice(0, 5), // Log first 5 IDs
+      });
 
       const gmail = this.getGmailClient(accessToken);
 
       // Batch modify messages to add TRASH label
       // In Gmail API, TRASH label ID is 'TRASH'
-      await gmail.users.messages.batchModify({
+      const response = await gmail.users.messages.batchModify({
         userId: 'me',
         requestBody: {
           ids: messageIds,
           addLabelIds: ['TRASH'],
         },
       });
+
+      console.log('✅ Gmail API: Successfully moved to trash', {
+        response: response.status,
+        messageIdsCount: messageIds.length,
+      });
     } catch (error) {
-      console.error('Error moving messages to trash:', error);
+      console.error('❌ Error moving messages to trash:', error);
+      if (error instanceof Error) {
+        console.error('   Error message:', error.message);
+        console.error('   Error stack:', error.stack);
+      }
       throw new Error('Failed to move messages to trash');
     }
   }

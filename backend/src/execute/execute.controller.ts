@@ -24,6 +24,16 @@ export class ExecuteController {
 
     // Check confirmation guardrail before execution
     const requiresConfirm = this.requiresConfirmation(body.plan);
+    
+    // Debug logging
+    console.log('🔍 Execute Request Debug:', {
+      intent: body.plan.intent,
+      risk: body.plan.risk,
+      maxResults: body.plan.params?.maxResults,
+      confirm: body.confirm,
+      requiresConfirm,
+    });
+    
     if (requiresConfirm && body.confirm !== true) {
       // Log the blocked execution attempt
       await this.executeService.logConfirmationRequired(
@@ -36,6 +46,11 @@ export class ExecuteController {
         error: 'CONFIRMATION_REQUIRED',
         message: 'This action requires explicit confirmation. Please set confirm=true in your request.',
         plan: body.plan,
+        debug: {
+          maxResults: body.plan.params?.maxResults,
+          calculatedCap: Math.min(body.plan.params?.maxResults ?? 50, 50),
+          requiresConfirm,
+        },
       });
     }
 
@@ -67,8 +82,24 @@ export class ExecuteController {
    * Determine if the action plan requires confirmation
    */
   private requiresConfirmation(plan: { intent: string; risk?: string; params?: { maxResults?: number } }): boolean {
+    // Ensure params exists
+    if (!plan.params) {
+      plan.params = {};
+    }
+    
     // Calculate execution cap
-    const cap = Math.min(plan.params?.maxResults ?? 50, 50);
+    // If maxResults is not set, default to 50 (but we'll require confirmation for multi-email)
+    const maxResults = plan.params.maxResults;
+    const cap = maxResults !== undefined 
+      ? Math.min(Math.max(1, maxResults), 50) // Clamp between 1 and 50
+      : 50; // Default to 50 if not specified
+    
+    console.log('🔍 Confirmation Check:', {
+      intent: plan.intent,
+      risk: plan.risk,
+      maxResults,
+      cap,
+    });
     
     // Require confirmation for DELETE_EMAILS with cap > 1
     if (plan.intent === 'DELETE_EMAILS' && cap > 1) {

@@ -52,8 +52,16 @@ export function useChat(jwt: string | null) {
   }, []);
 
   const executeActionPlan = useCallback(async (plan: Message['plan']) => {
+    console.log('🚀 executeActionPlan called', {
+      hasJwt: !!jwt,
+      hasPlan: !!plan,
+      plan,
+    });
+
     if (!jwt || !plan) {
-      setError('Cannot execute: missing JWT or plan');
+      const errorMsg = !jwt ? 'Missing JWT' : 'Missing plan';
+      console.error('❌ Cannot execute:', errorMsg);
+      setError(`Cannot execute: ${errorMsg}`);
       return;
     }
 
@@ -61,7 +69,9 @@ export function useChat(jwt: string | null) {
       setExecuting(true);
       setError(null);
 
+      console.log('📤 Calling executePlan API...');
       const result = await executePlan(jwt, plan);
+      console.log('✅ ExecutePlan result:', result);
       
       // Add success message
       const successMessage: Message = {

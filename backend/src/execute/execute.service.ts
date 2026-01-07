@@ -45,6 +45,11 @@ export class ExecuteService {
     }> = [];
 
     try {
+      // Ensure params exists
+      if (!plan.params) {
+        plan.params = { query: '' };
+      }
+
       // Get access token
       const accessToken = await this.gmailService.getGoogleAccessToken(userId);
 
@@ -55,18 +60,39 @@ export class ExecuteService {
       const executionCap = requestedMax !== undefined 
         ? Math.min(Math.max(1, requestedMax), 50) // Clamp between 1 and 50
         : 50; // Default to 50
+      
+      console.log('🔍 ExecuteService Debug:', {
+        maxResults: requestedMax,
+        executionCap,
+        query: plan.params.query,
+      });
 
       // Get message IDs matching the query (limited by execution cap)
+      console.log('🔍 Fetching messages:', {
+        query: plan.params.query,
+        executionCap,
+      });
+      
       const foundMessageIds = await this.gmailService.listMessages(
         accessToken,
         plan.params.query,
         executionCap // SAFETY: Hard cap - never fetch more than executionCap
       );
 
+      console.log('📬 Found messages:', {
+        count: foundMessageIds.length,
+        messageIds: foundMessageIds.slice(0, 5), // Log first 5
+      });
+
       // SINGLE SOURCE OF TRUTH: idsToAffect
       // This array determines exactly which emails will be affected
       // All operations (delete, count, logging) MUST use this array
       const idsToAffect = foundMessageIds.slice(0, executionCap);
+      
+      console.log('✅ IDs to affect:', {
+        count: idsToAffect.length,
+        messageIds: idsToAffect,
+      });
 
       if (idsToAffect.length === 0) {
         affectedCount = 0;
@@ -109,8 +135,15 @@ export class ExecuteService {
       // Execute the action based on intent
       switch (plan.intent) {
         case 'DELETE_EMAILS':
+          console.log('🗑️ Deleting emails:', {
+            count: idsToAffect.length,
+            messageIds: idsToAffect,
+          });
+          
           // SAFETY: Only delete emails in idsToAffect (never more than executionCap)
           await this.gmailService.moveMessagesToTrash(accessToken, idsToAffect);
+          
+          console.log('✅ Successfully moved emails to trash');
           
           // SINGLE SOURCE OF TRUTH: affectedCount = idsToAffect.length
           affectedCount = idsToAffect.length;

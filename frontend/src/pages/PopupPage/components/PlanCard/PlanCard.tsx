@@ -71,7 +71,18 @@ export function PlanCard({ plan, onCancel, onApprove, executing = false }: PlanC
 
       <div className={styles.actions}>
         <button
-          onClick={onApprove}
+          onClick={() => {
+            console.log('🔘 Delete button clicked', {
+              hasOnApprove: !!onApprove,
+              plan,
+              executing,
+            });
+            if (onApprove) {
+              onApprove();
+            } else {
+              console.error('❌ onApprove is not defined!');
+            }
+          }}
           disabled={executing || !onApprove}
           className={`${styles.button} ${styles.buttonApprove} ${(!onApprove || executing) ? styles.buttonDisabled : ''}`}
         >
