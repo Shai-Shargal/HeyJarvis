@@ -11,6 +11,7 @@ export interface GmailMessage {
   subject: string;
   from: string;
   date: string;
+  snippet?: string; // Optional snippet for message preview
 }
 
 @Injectable()
@@ -180,6 +181,42 @@ export class GmailService {
     } catch (error) {
       console.error('Error getting message metadata:', error);
       throw new Error(`Failed to get message metadata for ${messageId}`);
+    }
+  }
+
+  /**
+   * Get message metadata with snippet (for logs)
+   */
+  async getMessageWithSnippet(
+    accessToken: string,
+    messageId: string
+  ): Promise<GmailMessage> {
+    try {
+      const gmail = this.getGmailClient(accessToken);
+      const response = await gmail.users.messages.get({
+        userId: 'me',
+        id: messageId,
+        format: 'metadata',
+        metadataHeaders: ['Subject', 'From', 'Date'],
+      });
+
+      const headers = response.data.payload?.headers || [];
+      const getHeader = (name: string) =>
+        headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
+
+      // Get snippet from response (Gmail API provides this automatically)
+      const snippet = response.data.snippet || '';
+
+      return {
+        id: messageId,
+        subject: getHeader('Subject'),
+        from: getHeader('From'),
+        date: getHeader('Date'),
+        snippet: snippet.substring(0, 200), // Limit snippet to 200 chars
+      };
+    } catch (error) {
+      console.error('Error getting message with snippet:', error);
+      throw new Error(`Failed to get message with snippet for ${messageId}`);
     }
   }
 

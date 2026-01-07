@@ -32,9 +32,16 @@ export class GoogleAuthService {
   ) {}
 
   getGoogleAuthUrl(): string {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI');
+    
+    if (!clientId || !redirectUri) {
+      throw new Error('GOOGLE_CLIENT_ID and GOOGLE_REDIRECT_URI must be set');
+    }
+
     const params = new URLSearchParams({
-      client_id: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-      redirect_uri: this.configService.get<string>('GOOGLE_REDIRECT_URI'),
+      client_id: clientId,
+      redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid email profile https://www.googleapis.com/auth/gmail.modify',
       access_type: 'offline',
@@ -176,4 +183,5 @@ export class GoogleAuthService {
     };
   }
 }
+
 

@@ -6,17 +6,18 @@ export type IUser = User & Document;
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true, index: true })
-  googleId: string;
+  googleId!: string;
 
   @Prop({ required: true, unique: true, index: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true })
-  name: string;
+  name!: string;
 
   @Prop()
   picture?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
 

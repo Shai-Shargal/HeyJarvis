@@ -15,22 +15,33 @@ export class ChatService {
       // Generate plan from LLM
       const plan = await this.llmService.generateActionPlan(userMessage);
 
+      // Check if user asked for "latest" email - enforce maxResults=1
+      const userMessageLower = userMessage.toLowerCase();
+      const isLatestEmail = userMessageLower.includes('latest') || 
+                            userMessageLower.includes('newest') ||
+                            userMessageLower.includes('most recent') ||
+                            userMessageLower.includes('last email');
+      
+      // SAFETY: If user asks for "latest", enforce maxResults=1
+      if (isLatestEmail) {
+        plan.params.maxResults = 1;
+        // Ensure query is inbox-based for latest email
+        if (!plan.params.query || plan.params.query.trim() === '') {
+          plan.params.query = 'is:inbox';
+        }
+      }
+
       // Try to get real email samples from Gmail
       try {
         const accessToken = await this.gmailService.getGoogleAccessToken(userId);
         
-        // Check if user asked for "latest" email - use a better query
-        const isLatestEmail = userMessage.toLowerCase().includes('latest') || 
-                              userMessage.toLowerCase().includes('newest') ||
-                              userMessage.toLowerCase().includes('most recent');
-        
         let query = plan.params.query;
-        let maxResults = 100;
+        let maxResults = plan.params.maxResults ?? 100; // Use plan's maxResults if set
         
         // For "latest" queries, get the actual newest email from inbox
         if (isLatestEmail) {
           query = 'is:inbox'; // Get from inbox, sorted by newest first
-          maxResults = 10; // Get top 10 to filter out OpenAI emails
+          maxResults = 10; // Get top 10 to filter out OpenAI emails (for sample only)
         }
         
         // Get message IDs matching the query

@@ -23,6 +23,7 @@ export interface ActionPlan {
   params: {
     query: string;
     labelName?: string;
+    maxResults?: number; // Optional limit (capped at 50 for safety)
   };
   estimatedImpact: {
     count: number;
@@ -114,13 +115,22 @@ export async function chat(jwt: string, message: string): Promise<ChatResponse> 
 }
 
 export async function executePlan(jwt: string, plan: ActionPlan): Promise<ExecuteResponse> {
+  // Calculate execution cap to determine if confirmation is needed
+  const cap = Math.min(plan.params?.maxResults ?? 50, 50);
+  const requiresConfirm = 
+    (plan.intent === 'DELETE_EMAILS' && cap > 1) ||
+    (plan.risk === 'HIGH' && cap > 1);
+
   const response = await fetch(`${BASE_URL}/execute`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${jwt}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ plan }),
+    body: JSON.stringify({ 
+      plan,
+      confirm: requiresConfirm ? true : undefined, // Send confirm=true if required
+    }),
   });
 
   if (!response.ok) {

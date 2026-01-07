@@ -18,6 +18,7 @@ export interface ActionPlan {
   params: {
     query: string; // Gmail search query
     labelName?: string; // For LABEL_EMAILS
+    maxResults?: number; // Optional limit (capped at 50 for safety)
   };
   estimatedImpact: EstimatedImpact;
   explanation: string;

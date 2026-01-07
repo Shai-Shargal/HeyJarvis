@@ -6,14 +6,15 @@ export type IGoogleToken = GoogleToken & Document;
 @Schema({ timestamps: true })
 export class GoogleToken {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, unique: true, index: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true })
-  refreshToken: string;
+  refreshToken!: string;
 
   @Prop({ type: [String], required: true })
-  scopes: string[];
+  scopes!: string[];
 }
 
 export const GoogleTokenSchema = SchemaFactory.createForClass(GoogleToken);
+
 
